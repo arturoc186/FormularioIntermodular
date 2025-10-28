@@ -1,6 +1,7 @@
 <?php
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+            // Aquí recupero y proceso los datos enviados por el formulario.
             // Para cifrar la contraseña he optado por el cifrado ROT13, que
             // cambia la letra actual por la que está 13 posiciones adelante
             // No es un cifrado seguro, pero me sirve para hacer este ejemplo.
@@ -18,6 +19,7 @@
 
             // Aunque los campos no pueden ser vacíos, ya que vienen regulados por el tag
             // required y por el type de HTML, valido las entradas también en el servidor.
+            // Para esto, creo una variable booleana que me indicará si todo es correcto.
 
             $valido = true;
 
@@ -54,9 +56,24 @@
                 $valido = false;
             }
 
+            
+            // Consultando medidas de seguridad adicionales, he decidido el hashear la
+            // contraseña con el algoritmo SHA-256. Para esto he hecho una función que
+            // recibe la contraseña, usando la función hash de PHP, y devuelve el hash.
+            // He aprendido que funciona: hash("algoritmo", $cadena, binario_o_no);
+
+            function hashearContrasena($password) {
+                 $hash_generado = hash("sha256", $password, false);
+                 return $hash_generado;
+            }
+
+            $hash_contrasena = hashearContrasena($password);
+
 
             // Arriba he validado todos los casos en los que el registro no se llevaría a
             // cabo. Si la variable valido fuera falsa, se habría dado alguno de los casos.
+            // La función exit funciona para finalizar el script PHP, lo que detendría la 
+            // ejecución del script en caso de éxito, y quitaría el formulario de la pantalla 
 
             if ($valido === true){
                 echo("<h2>¡Bienvenido/a, $nombre!</h2>");
@@ -68,30 +85,18 @@
                 echo "<p>Contraseña: " .htmlspecialchars($password_cifrada). "</p>";
                 echo "<p>Nacimiento: " .htmlspecialchars($fecha_nacimiento)."</p>";
                 echo "<p>País:".htmlspecialchars($pais)."</p>";
+                echo "<p>Contraseña hasheada: ". $hash_contrasena ."</p>";
 
-            if ($acepto = 1) {
-                echo("<p>Términos: Has aceptado los términos y condiciones. </p>");
-            } else {
-                echo("<p>Términos: No has aceptado los términos y condiciones. </p>");
-            }
+                if ($acepto = 1) {
+                    echo("<p>Términos: Has aceptado los términos y condiciones. </p>");
+                } else {
+                    echo("<p>Términos: No has aceptado los términos y condiciones. </p>");
+                }                
                 exit;
             } else {
                 echo("<p>Revisa los errores e inténtalo de nuevo.</p>");
             }
 
-
-            // Consultando medidas de seguridad adicionales, he decidido el hashear la
-            // contraseña con el algoritmo SHA-256. Para esto he hecho una función que
-            // recibe la contraseña, usando la función hash de PHP, y devuelve el hash.
-            // He aprendido que va: hash("algoritmo", $cadena, binario_o_no);
-
-            // function hashearContrasena($password) {
-            //     $hash_generado = hash("sha256", $password, false);
-            //     return $hash_generado;
-            // }
-
-            // $hash_contrasena = hashearContrasena($password);
-            // echo "<p>Contraseña hasheada: ". $hash_contrasena ."</p>";
 
         } else {
             echo "<p>Rellene el formulario para enviar sus datos.</p>";
