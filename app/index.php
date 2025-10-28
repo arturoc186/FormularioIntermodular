@@ -1,12 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulario Arturo Diseño</title>
-</head>
-<body>
-    <?php
+<?php
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Para cifrar la contraseña he optado por el cifrado ROT13, que
@@ -17,55 +9,103 @@
             $apellidos = trim($_POST['apellidos'] ?? '');
             $email = trim($_POST['email'] ?? '');
             $password = trim($_POST['password'] ?? '');
+            $conf_password = trim($_POST['conf-password'] ?? '');
             $password_cifrada = str_rot13($password);
             $fecha_nacimiento = trim($_POST['fecha-nacimiento'] ?? '');
             $pais = trim($_POST['pais'] ?? '');
             $acepto = isset($_POST['acepto']);
 
-            echo "<h2>Datos recibidos:</h2>";
-            echo "<p>Nombre: ".htmlspecialchars($nombre)."</p>";
-            echo "<p>Apellidos: ".htmlspecialchars($apellidos)."</p>";
-            echo "<p>Correo: ".htmlspecialchars($email)."</p>";
-            echo "<p>Contraseña: " .htmlspecialchars($password_cifrada). "</p>";
-            echo "<p>Nacimiento: " .htmlspecialchars($fecha_nacimiento)."</p>";
-            echo "<p>País:".htmlspecialchars($pais)."</p>";
+
+            // Aunque los campos no pueden ser vacíos, ya que vienen regulados por el tag
+            // required y por el type de HTML, valido las entradas también en el servidor.
+
+            $valido = true;
+
+            if (empty($nombre)){ 
+                echo("El campo del nombre no puede estar vacío."); 
+                $valido = false;
+            }
+
+            if (empty($apellidos)){ 
+                echo("El campo de apellidos no puede estar vacío."); 
+                $valido = false;
+            }
+
+            if (empty($email)) {
+                echo "<p>El correo electrónico es obligatorio.</p>";
+                $valido = false;
+            } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                echo "<p>El formato del correo electrónico no es válido.</p>";
+                $valido = false;
+            }
+
+            if (strlen($password) < 8) {
+                echo "<p>La contraseña debe tener al menos 8 caracteres.</p>";
+                $valido = false;
+            }
+
+            if ($password !== $conf_password) {
+                echo "<p>Las contraseñas no coinciden.</p>";
+                $valido = false;
+            }
+
+            if (!$acepto) {
+                echo("<p>Debes aceptar los términos y condiciones para seguir.</p>");
+                $valido = false;
+            }
+
+
+            // Arriba he validado todos los casos en los que el registro no se llevaría a
+            // cabo. Si la variable valido fuera falsa, se habría dado alguno de los casos.
+
+            if ($valido === true){
+                echo("<h2>¡Bienvenido/a, $nombre!</h2>");
+
+                echo "<h3>Estos son tus datos:</h3>";
+                echo "<p>Nombre: ".htmlspecialchars($nombre)."</p>";
+                echo "<p>Apellidos: ".htmlspecialchars($apellidos)."</p>";
+                echo "<p>Correo: ".htmlspecialchars($email)."</p>";
+                echo "<p>Contraseña: " .htmlspecialchars($password_cifrada). "</p>";
+                echo "<p>Nacimiento: " .htmlspecialchars($fecha_nacimiento)."</p>";
+                echo "<p>País:".htmlspecialchars($pais)."</p>";
 
             if ($acepto = 1) {
                 echo("<p>Términos: Has aceptado los términos y condiciones. </p>");
             } else {
                 echo("<p>Términos: No has aceptado los términos y condiciones. </p>");
             }
+                exit;
+            } else {
+                echo("<p>Revisa los errores e inténtalo de nuevo.</p>");
+            }
+
 
             // Consultando medidas de seguridad adicionales, he decidido el hashear la
             // contraseña con el algoritmo SHA-256. Para esto he hecho una función que
             // recibe la contraseña, usando la función hash de PHP, y devuelve el hash.
-
             // He aprendido que va: hash("algoritmo", $cadena, binario_o_no);
 
-            function hashearContrasena($password) {
-                $hash_generado = hash("sha256", $password, false);
-                return $hash_generado;
-            }
+            // function hashearContrasena($password) {
+            //     $hash_generado = hash("sha256", $password, false);
+            //     return $hash_generado;
+            // }
 
-            $hash_contrasena = hashearContrasena($password);
-            echo "<p>Contraseña hasheada: ". $hash_contrasena ."</p>";
-
-            // Aunque los campos no pueden ser vacíos, ya que vienen regulados por el tag
-            // required de HTML, añado la confirmación, por si se diera esta circunstancia.
-            
-            if ($nombre = empty($nombre)){ echo("El campo del nombre no puede estar vacío."); }
-            if ($apellidos = empty($apellidos)){ echo("El campo de apellidos no puede estar vacío."); }
-            if ($email = empty($email)){ echo("El campo del correo no puede estar vacío."); }
-            if ($password = empty($password)){ echo("El campo de contraseña no puede estar vacío."); }
-            if ($fecha_nacimiento = empty($fecha_nacimiento)){ echo("El campo de tu nacimiento no puede estar vacío."); }
-            if ($pais = empty($pais)){ echo("El campo del país no puede estar vacío."); }
-            if ($acepto = empty($acepto)){ echo("Debes aceptar los términos y condiciones para seguir."); }
-        
+            // $hash_contrasena = hashearContrasena($password);
+            // echo "<p>Contraseña hasheada: ". $hash_contrasena ."</p>";
 
         } else {
             echo "<p>Rellene el formulario para enviar sus datos.</p>";
         }
     ?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Arturo Diseño</title>
+</head>
+<body>
     <form action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" method="post">
         <fieldset>
             <legend>Formulario</legend>
@@ -84,6 +124,9 @@
             <article>
                 <label for="password">Contraseña:</label>
                 <input type="password" id="password" name="password" required>
+
+                <label for="conf-password">Conf Contraseña:</label>
+                <input type="password" id="conf-password" name="conf-password" required>
             </article>
             <article>
                 <label for="fecha-nacimiento">Fecha de Nacimiento:</label>
